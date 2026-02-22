@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaudoAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --s1: #0d1117;
+  --s2: #151c26;
+  --s3: #1c2535;
+  --border: #1e2d45;
+  --border2: #243347;
+  --cyan: #00c8f0;
+  --cyan-dim: rgba(0,200,240,0.10);
+  --cyan-glow: rgba(0,200,240,0.22);
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,0.10);
+  --orange: #ffaa44;
+  --orange-dim: rgba(255,170,68,0.10);
+  --red: #ff6b7a;
+  --red-dim: rgba(255,107,122,0.10);
+  --text: #dde8f5;
+  --muted: #6b7f99;
+  --muted2: #4a5a70;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 10% 5%,rgba(0,200,240,0.05) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 90% 95%,rgba(0,229,160,0.03) 0%,transparent 50%);pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:relative;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:rgba(7,9,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--cyan);letter-spacing:-0.5px;}
+.logo em{color:var(--muted);font-style:normal;}
+.header-center{display:flex;align-items:center;gap:6px;}
+.api-key-btn{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--s2);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s;}
+.api-key-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.api-key-btn.configured{border-color:rgba(0,229,160,.3);color:var(--green);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;display:grid;grid-template-columns:300px 1fr 300px;height:calc(100vh - 56px);}
+
+/* PANELS */
+.panel{display:flex;flex-direction:column;overflow:hidden;}
+.left-panel{border-right:1px solid var(--border);background:var(--s1);}
+.center-panel{background:var(--bg);}
+.right-panel{border-left:1px solid var(--border);background:var(--s1);}
+
+.panel-scroll{flex:1;overflow-y:auto;padding:16px;}
+.panel-scroll::-webkit-scrollbar{width:3px;}
+.panel-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.panel-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:7px;}
+
+/* SECTION */
+.sec{margin-bottom:20px;}
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* EXAM BUTTONS */
+.exam-list{display:flex;flex-direction:column;gap:5px;}
+.exam-btn{width:100%;padding:9px 12px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:9px;text-align:left;}
+.exam-btn:hover{background:var(--s2);color:var(--text);border-color:var(--border);}
+.exam-btn.active{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(0,200,240,.25);}
+.exam-btn .ei{font-size:15px;flex-shrink:0;}
+.exam-btn .ec{flex:1;}
+
+/* MODE TABS */
+.mode-tabs{display:flex;gap:3px;background:var(--bg);border-radius:9px;padding:3px;margin-bottom:12px;}
+.mode-tab{flex:1;padding:7px 4px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:4px;}
+.mode-tab:hover{color:var(--text);}
+.mode-tab.active{background:var(--s2);color:var(--cyan);border:1px solid var(--border2);}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border2);border-radius:11px;padding:22px 12px;text-align:center;cursor:pointer;transition:all .22s;position:relative;background:var(--bg);}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--cyan);background:var(--cyan-dim);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:26px;margin-bottom:6px;}
+.upload-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.upload-hint{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+
+/* FILE LIST */
+.file-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.file-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:9px;}
+.file-thumb{width:34px;height:34px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--s2);overflow:hidden;}
+.file-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-size{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.file-remove{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:3px;border-radius:4px;transition:color .18s;flex-shrink:0;}
+.file-remove:hover{color:var(--red);}
+
+/* TEXT INPUT */
+.text-area{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:12px;line-height:1.6;resize:vertical;min-height:130px;outline:none;transition:border-color .2s;}
+.text-area:focus{border-color:var(--cyan);}
+.text-area::placeholder{color:var(--muted2);}
+.text-hint{margin-top:7px;font-size:10px;color:var(--muted2);font-family:'IBM Plex Mono',monospace;line-height:1.6;}
+
+/* GENERATE BTN */
+.btn-generate{margin:0 16px 16px;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,#00c8f0,#0099cc);color:#07090f;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;}
+.btn-generate:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,200,240,.35);}
+.btn-generate:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* CENTER: REPORT */
+.report-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;}
+.report-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:7px;}
+.report-actions{display:flex;gap:6px;}
+.act-btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--s2);color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;}
+.act-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.act-btn:disabled{opacity:.3;cursor:not-allowed;}
+.act-btn.save-btn:hover:not(:disabled){border-color:var(--green);color:var(--green);background:var(--green-dim);}
+
+.report-body{flex:1;overflow-y:auto;padding:20px;}
+.report-body::-webkit-scrollbar{width:3px;}
+.report-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* EMPTY */
+.empty-state{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted2);text-align:center;padding:32px;}
+.empty-icon{font-size:48px;opacity:.2;}
+.empty-title{font-size:14px;font-weight:600;color:var(--muted);}
+.empty-sub{font-size:11px;font-family:'IBM Plex Mono',monospace;max-width:260px;line-height:1.8;}
+
+/* LOADING */
+.loading-state{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;}
+.sonar{width:64px;height:64px;position:relative;display:flex;align-items:center;justify-content:center;}
+.sonar::before,.sonar::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--cyan);animation:sonarPulse 2s ease-out infinite;}
+.sonar::after{animation-delay:1s;}
+.sonar-dot{width:12px;height:12px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+@keyframes sonarPulse{0%{transform:scale(.35);opacity:.9;}100%{transform:scale(1.5);opacity:0;}}
+.load-steps{display:flex;flex-direction:column;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;}
+.load-step{color:var(--muted2);display:flex;align-items:center;justify-content:center;gap:7px;transition:color .3s;}
+.load-step.active{color:var(--cyan);}
+.load-step.done{color:var(--green);}
+
+/* REPORT CARD */
+.report-card{background:var(--s1);border:1px solid var(--border2);border-radius:13px;overflow:hidden;}
+.report-card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;gap:10px;}
+.exam-tag{display:inline-flex;align-items:center;gap:5px;background:var(--cyan-dim);border:1px solid rgba(0,200,240,.2);color:var(--cyan);font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;}
+.report-editable{width:100%;background:transparent;border:none;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.9;resize:none;outline:none;padding:18px;min-height:380px;}
+
+/* RIGHT: BANCO */
+.banco-filters{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .18s;}
+.filter-btn:hover{border-color:var(--border2);color:var(--text);}
+.filter-btn.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.filter-btn.normal-f.active{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+.filter-btn.patol-f.active{border-color:var(--orange);color:var(--orange);background:var(--orange-dim);}
+
+.banco-list{display:flex;flex-direction:column;gap:7px;}
+.banco-empty{text-align:center;padding:32px 16px;color:var(--muted2);font-size:11px;font-family:'IBM Plex Mono',monospace;line-height:1.8;}
+
+.laudo-card{padding:11px 13px;border-radius:10px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .18s;}
+.laudo-card:hover{border-color:var(--border2);background:var(--s2);}
+.laudo-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;}
+.laudo-exam-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;font-weight:500;text-transform:uppercase;letter-spacing:.8px;padding:2px 8px;border-radius:20px;}
+.tag-normal{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.tag-patologico{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,170,68,.2);}
+.laudo-date{font-size:9px;color:var(--muted2);font-family:'IBM Plex Mono',monospace;}
+.laudo-preview{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.laudo-card-actions{display:flex;gap:5px;margin-top:8px;}
+.lc-btn{padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:10px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .15s;}
+.lc-btn:hover{color:var(--text);border-color:var(--border2);}
+.lc-btn.del:hover{color:var(--red);border-color:rgba(255,107,122,.3);}
+
+/* SAVE MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(7,9,15,.85);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--s2);border:1px solid var(--border2);border-radius:16px;padding:28px;width:360px;max-width:90vw;}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:20px;color:var(--text);}
+.modal-field{margin-bottom:16px;}
+.modal-label{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:block;}
+.modal-select,.modal-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.modal-select:focus,.modal-input:focus{border-color:var(--cyan);}
+.modal-select option{background:var(--bg);}
+.modal-btns{display:flex;gap:8px;margin-top:20px;}
+.modal-btn{flex:1;padding:11px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.modal-btn.cancel{background:var(--s3);color:var(--muted);}
+.modal-btn.cancel:hover{color:var(--text);}
+.modal-btn.confirm{background:linear-gradient(135deg,var(--green),#00b37e);color:#07090f;}
+.modal-btn.confirm:hover{box-shadow:0 4px 16px rgba(0,229,160,.3);}
+
+/* API KEY MODAL */
+.apikey-modal{background:var(--s2);border:1px solid var(--border2);border-radius:16px;padding:28px;width:400px;max-width:90vw;}
+.apikey-hint{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted2);margin-top:8px;line-height:1.6;}
+
+/* RECORDING */
+.rec-box{border:1px solid var(--border2);border-radius:12px;background:var(--bg);overflow:hidden;}
+.rec-idle{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 16px;text-align:center;}
+.rec-icon{font-size:32px;}
+.rec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.rec-sub{font-size:11px;color:var(--muted);line-height:1.6;max-width:220px;}
+.rec-start-btn{padding:10px 24px;border-radius:9px;border:none;background:linear-gradient(135deg,#ff6b7a,#cc3344);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
+.rec-start-btn:hover{box-shadow:0 4px 16px rgba(255,107,122,.4);transform:translateY(-1px);}
+.rec-active{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 16px;}
+.rec-pulse-wrap{display:flex;align-items:center;gap:10px;}
+.rec-pulse{width:12px;height:12px;border-radius:50%;background:var(--red);animation:recBlink .8s ease infinite;}
+@keyframes recBlink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,107,122,.5);}50%{opacity:.5;box-shadow:0 0 0 6px rgba(255,107,122,0);}}
+.rec-live{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--red);letter-spacing:1px;}
+.rec-timer{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;color:var(--text);letter-spacing:2px;}
+.rec-transcript-wrap{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:120px;overflow-y:auto;}
+.rec-transcript-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.rec-transcript{font-size:11px;color:var(--muted);line-height:1.6;}
+.rec-stop-btn{width:100%;padding:11px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--green),#00b37e);color:#07090f;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.rec-stop-btn:hover{box-shadow:0 4px 16px rgba(0,229,160,.3);}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--s3);border:1px solid var(--border2);border-radius:9px;padding:10px 16px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:rgba(0,229,160,.3);color:var(--green);}
+.toast.error{border-color:rgba(255,107,122,.3);color:var(--red);}
+
+/* LAUDO VIEWER */
+.laudo-viewer{background:var(--s1);border:1px solid var(--border2);border-radius:13px;padding:18px;margin-top:12px;}
+.lv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.lv-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.lv-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px;}
+.lv-close:hover{color:var(--red);}
+.lv-text{font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;}
+
+@media(max-width:900px){
+  body{overflow:auto;}
+  .app{grid-template-columns:1fr;grid-template-rows:auto auto auto;height:auto;}
+  .right-panel{border-left:none;border-top:1px solid var(--border);}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Laudo<em>.</em>AI</div>
+  <div class="header-center">
+    <button class="api-key-btn" id="api-btn" onclick="openApiModal()">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="api-btn-label">Configurar API Key</span>
+    </button>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);">v2.0 · Claude Vision</div>
+</header>
+
+<div class="app">
+
+  <!-- ─── LEFT: INPUT ─── -->
+  <div class="panel left-panel">
+    <div class="panel-header">
+      <div class="panel-title">⚙️ Configuração</div>
+    </div>
+    <div class="panel-scroll">
+
+      <!-- Exam type -->
+      <div class="sec">
+        <div class="sec-label">Tipo de Exame</div>
+        <div class="exam-list" id="exam-list">
+          <button class="exam-btn active" data-exam="obstetrico" onclick="selectExam(this)"><span class="ei">🤰</span><span class="ec">Obstétrico</span></button>
+          <button class="exam-btn" data-exam="abdome" onclick="selectExam(this)"><span class="ei">🫀</span><span class="ec">Abdome Total</span></button>
+          <button class="exam-btn" data-exam="transvaginal" onclick="selectExam(this)"><span class="ei">🔬</span><span class="ec">Transvaginal</span></button>
+          <button class="exam-btn" data-exam="ginecologico" onclick="selectExam(this)"><span class="ei">🧬</span><span class="ec">Ginecológico</span></button>
+          <button class="exam-btn" data-exam="prostata" onclick="selectExam(this)"><span class="ei">🩺</span><span class="ec">Próstata</span></button>
+          <button class="exam-btn" data-exam="rins" onclick="selectExam(this)"><span class="ei">💧</span><span class="ec">Rins e Vias Urinárias</span></button>
+          <button class="exam-btn" data-exam="tireoide" onclick="selectExam(this)"><span class="ei">🦋</span><span class="ec">Tireoide</span></button>
+          <button class="exam-btn" data-exam="tireoide-doppler" onclick="selectExam(this)"><span class="ei">🌊</span><span class="ec">Tireoide c/ Doppler</span></button>
+          <button class="exam-btn" data-exam="mama" onclick="selectExam(this)"><span class="ei">🎗️</span><span class="ec">Mama</span></button>
+        </div>
+      </div>
+
+      <!-- Input mode -->
+      <div class="sec">
+        <div class="sec-label">Entrada</div>
+        <div class="mode-tabs">
+          <button class="mode-tab active" onclick="switchMode('file',this)">📎 Arquivo</button>
+          <button class="mode-tab" onclick="switchMode('text',this)">✏️ Texto</button>
+          <button class="mode-tab" onclick="switchMode('rec',this)">🎙️ Gravar</button>
+        </div>
+
+        <div id="file-mode">
+          <div class="upload-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="image/*,.pdf" multiple onchange="handleFiles(this.files)">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-title">Arraste ou clique</div>
+            <div class="upload-hint">JPG · PNG · PDF · Foto do aparelho</div>
+          </div>
+          <div class="file-list" id="file-list"></div>
+        </div>
+
+        <div id="text-mode" style="display:none;">
+          <textarea class="text-area" id="text-input"
+            placeholder="Fale ou escreva livremente...
+
+Ex: 'Paciente bem, IG 28 semanas, DBP 71mm, CC 264, CA 247, CF 54, LA normal, BCF 148...'
+
+A IA filtra a conversa e extrai só os dados clínicos." rows="6"></textarea>
+          <div class="text-hint">💡 Pode ditar com conversa — a IA ignora e foca nas medidas.</div>
+        </div>
+
+        <!-- GRAVAÇÃO -->
+        <div id="rec-mode" style="display:none;">
+          <div class="rec-box" id="rec-box">
+            <div class="rec-idle" id="rec-idle">
+              <div class="rec-icon">🎙️</div>
+              <div class="rec-title">Gravação de Atendimento</div>
+              <div class="rec-sub">Grave o exame completo — a IA transcreve e monta o laudo automaticamente</div>
+              <button class="rec-start-btn" onclick="startRecording()">▶ Iniciar Gravação</button>
+            </div>
+            <div class="rec-active" id="rec-active" style="display:none;">
+              <div class="rec-pulse-wrap">
+                <div class="rec-pulse"></div>
+                <span class="rec-live">● REC</span>
+              </div>
+              <div class="rec-timer" id="rec-timer">00:00</div>
+              <div class="rec-transcript-wrap">
+                <div class="rec-transcript-label">Transcrição ao vivo</div>
+                <div class="rec-transcript" id="rec-transcript-live">Aguardando fala...</div>
+              </div>
+              <button class="rec-stop-btn" onclick="stopRecording()">⏹ Parar e Gerar Laudo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <button class="btn-generate" id="btn-gen" onclick="generateReport()" disabled>
+      ⚡ Gerar Laudo
+    </button>
+  </div>
+
+  <!-- ─── CENTER: REPORT ─── -->
+  <div class="panel center-panel">
+    <div class="report-topbar">
+      <div class="report-label">📄 Laudo</div>
+      <div class="report-actions">
+        <button class="act-btn" id="btn-copy" onclick="copyReport()" disabled>📋 Copiar</button>
+        <button class="act-btn save-btn" id="btn-save" onclick="openSaveModal()" disabled>💾 Salvar no Banco</button>
+        <button class="act-btn" id="btn-clear" onclick="clearAll()" disabled>🗑️</button>
+      </div>
+    </div>
+    <div class="report-body" id="report-body">
+      <div class="empty-state">
+        <div class="empty-icon">🩻</div>
+        <div class="empty-title">Nenhum laudo gerado</div>
+        <div class="empty-sub">Selecione o exame, envie a imagem ou escreva as medidas e clique em Gerar Laudo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── RIGHT: BANCO ─── -->
+  <div class="panel right-panel">
+    <div class="panel-header">
+      <div class="panel-title">🗄️ Banco de Laudos</div>
+      <span id="banco-count" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);">0 laudos</span>
+    </div>
+    <div class="panel-scroll">
+      <div class="sec">
+        <div class="banco-filters">
+          <button class="filter-btn active" data-f="todos" onclick="filterBanco(this)">Todos</button>
+          <button class="filter-btn normal-f" data-f="normal" onclick="filterBanco(this)">Normais</button>
+          <button class="filter-btn patol-f" data-f="patologico" onclick="filterBanco(this)">Patológicos</button>
+        </div>
+        <div class="banco-list" id="banco-list">
+          <div class="banco-empty">Nenhum laudo salvo ainda.<br>Gere e salve laudos para<br>construir seu banco.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SAVE MODAL -->
+<div class="modal-overlay" id="save-modal">
+  <div class="modal">
+    <div class="modal-title">💾 Salvar Laudo</div>
+    <div class="modal-field">
+      <label class="modal-label">Classificação</label>
+      <select class="modal-select" id="save-class">
+        <option value="normal">✅ Normal</option>
+        <option value="patologico">⚠️ Patológico</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Observação (opcional)</label>
+      <input class="modal-input" id="save-obs" type="text" placeholder="Ex: Mioma intramural, cálculo renal...">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeSaveModal()">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveLaudo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="api-modal">
+  <div class="apikey-modal">
+    <div class="modal-title">🔑 API Key Anthropic</div>
+    <div class="modal-field">
+      <label class="modal-label">Sua API Key</label>
+      <input class="modal-input" id="api-key-input" type="password" placeholder="sk-ant-...">
+      <div class="apikey-hint">
+        Obtenha em console.anthropic.com<br>
+        A chave fica salva localmente no seu navegador.
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeApiModal()">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveApiKey()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+const SUPA_URL = 'https://orsgbbpdgfhjmmkowunn.supabase.co';
+const SUPA_KEY = 'sb_publishable_72cEtH51tXeqJlth8EjTww_yHcX3qDb';
+
+// ─── STATE ───────────────────────────────────────────────────
+let selectedExam = 'obstetrico';
+let inputMode = 'file';
+let uploadedFiles = [];
+let currentReport = '';
+let bancoFilter = 'todos';
+let apiKey = localStorage.getItem('laudo_api_key') || '';
+let isRecording = false;
+
+// ─── EXAM CONFIG ─────────────────────────────────────────────
+const examNames = {
+  'obstetrico':       '🤰 Obstétrico',
+  'abdome':           '🫀 Abdome Total',
+  'transvaginal':     '🔬 Transvaginal',
+  'ginecologico':     '🧬 Ginecológico',
+  'prostata':         '🩺 Próstata',
+  'rins':             '💧 Rins e Vias Urinárias',
+  'tireoide':         '🦋 Tireoide',
+  'tireoide-doppler': '🌊 Tireoide c/ Doppler',
+  'mama':             '🎗️ Mama',
+};
+
+const examPrompts = {
+  'obstetrico': `Você é um médico ultrassonografista especialista em obstetrícia. Gere um laudo obstétrico completo, profissional, em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA OBSTÉTRICA
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+BIOMETRIA FETAL:
+- DBP: ___ mm
+- CC: ___ mm  
+- CA: ___ mm
+- CF: ___ mm
+- Peso fetal estimado: ___ g (percentil ___)
+- Idade gestacional (USG): ___ semanas e ___ dias
+
+VITALIDADE FETAL:
+- BCF: ___ bpm — ritmo regular
+- Movimentos fetais: presente/ausente
+- Tônus fetal: normal/alterado
+
+MORFOLOGIA:
+- Crânio: normal
+- Face: normal
+- Coluna: normal
+- Coração: 4 câmaras visíveis, ritmo regular
+- Abdome: normal
+- Membros: normais
+
+PLACENTA:
+- Localização: anterior/posterior/fundal/lateral
+- Grau: 0/I/II/III
+- Distância do OI: ___ cm
+
+LÍQUIDO AMNIÓTICO:
+- ILA/MBV: ___ cm — aspecto normal/oligoidrâmnio/polidrâmnio
+
+COLO UTERINO:
+- Comprimento: ___ mm
+
+CONCLUSÃO:
+Gestação tópica com feto único em apresentação cefálica/pélvica, vivo, com biometria compatível com ___ semanas e ___ dias. Demais achados normais para a idade gestacional.`,
+
+  'abdome': `Você é um médico ultrassonografista. Gere um laudo de abdome total completo e profissional em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE ABDOME TOTAL
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+FÍGADO: Dimensões normais (diâmetro longitudinal ___ cm). Ecotextura homogênea, contornos regulares. Sem lesões focais.
+
+VESÍCULA BILIAR: Normodistendida, paredes finas (≤3mm), sem cálculos ou espessamentos.
+
+VIAS BILIARES: Colédoco de calibre normal (___ mm). Sem dilatação das vias biliares intra ou extra-hepáticas.
+
+PÂNCREAS: Visualizado parcialmente. Ecotextura homogênea. Sem lesões evidentes.
+
+BAÇO: Dimensões normais (___ cm). Ecotextura homogênea, contornos regulares.
+
+RINS:
+- Rim direito: ___ x ___ cm — ecotextura normal, sistema coletor não dilatado
+- Rim esquerdo: ___ x ___ cm — ecotextura normal, sistema coletor não dilatado
+
+BEXIGA: Normodistendida, paredes finas, sem lesões intraluminais.
+
+AORTA ABDOMINAL: Calibre normal (___ cm).
+
+LÍQUIDO LIVRE ABDOMINAL: Ausente.
+
+CONCLUSÃO:
+[Síntese dos achados — normal ou descrever alterações]`,
+
+  'transvaginal': `Você é um médico ultrassonografista. Gere um laudo de ultrassonografia transvaginal completo em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+ÚTERO:
+- Posição: antevertido/retrovertido/mediovertido
+- Dimensões: ___ x ___ x ___ cm (comprimento x AP x largura)
+- Volume uterino: ___ cm³
+- Contornos: regulares/irregulares
+- Ecotextura miometrial: homogênea/heterogênea
+- Endométrio: ___ mm de espessura — aspecto proliferativo/secretor/atrófico/irregular
+- Linha endometrial: centrada/desviada
+
+OVÁRIO DIREITO:
+- Dimensões: ___ x ___ x ___ cm — Volume: ___ cm³
+- Aspecto: normal / folículo dominante (___ mm) / cisto simples (___ mm) / outros
+
+OVÁRIO ESQUERDO:
+- Dimensões: ___ x ___ x ___ cm — Volume: ___ cm³
+- Aspecto: normal / folículo dominante (___ mm) / cisto simples (___ mm) / outros
+
+REGIÃO ANEXIAL: Sem massas ou coleções
+
+FUNDO DE SACO DE DOUGLAS: Livre / pequena quantidade de líquido livre
+
+CONCLUSÃO:
+[Síntese dos achados principais]`,
+
+  'ginecologico': `Você é um médico ultrassonografista. Gere um laudo ginecológico abdominal completo em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA PÉLVICA / GINECOLÓGICA
+Via: abdominal
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+ÚTERO:
+- Posição: antevertido/retrovertido
+- Dimensões: ___ x ___ x ___ cm
+- Contornos: regulares
+- Ecotextura: homogênea
+- Endométrio: ___ mm — aspecto [fase do ciclo]
+- Miomas: ausentes / presentes (localização, dimensões)
+
+OVÁRIO DIREITO: ___ x ___ cm — aspecto normal
+
+OVÁRIO ESQUERDO: ___ x ___ cm — aspecto normal
+
+REGIÃO ANEXIAL: Sem massas ou coleções identificadas
+
+FUNDO DE SACO: Livre
+
+CONCLUSÃO:
+[Síntese dos principais achados]`,
+
+  'prostata': `Você é um médico ultrassonografista. Gere um laudo de ultrassonografia de próstata completo em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE PRÓSTATA (via suprapúbica / transretal)
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+PRÓSTATA:
+- Dimensões: ___ x ___ x ___ cm (transversal x AP x longitudinal)
+- Volume prostático: ___ cm³ (fórmula elipsóide)
+- Contornos: regulares/irregulares
+- Ecotextura: homogênea/heterogênea
+- Zona de transição: ___ (aspecto)
+- Zona periférica: ___ (aspecto)
+- Nódulos: ausentes / presentes (localização, dimensões, ecogenicidade)
+- Vesículas seminais: simétricas, sem dilatação
+
+BEXIGA:
+- Repleção: adequada
+- Paredes: finas e regulares
+- Conteúdo: anecogênico, sem cálculos
+- Resíduo pós-miccional: ___ mL (se disponível)
+
+CONCLUSÃO:
+Próstata com volume de ___ cm³, [dentro dos limites da normalidade para a faixa etária / com aumento de volume compatível com hiperplasia benigna / com nódulo suspeito — PIRADS ___].`,
+
+  'rins': `Você é um médico ultrassonografista. Gere um laudo de rins e vias urinárias completo em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE RINS E VIAS URINÁRIAS
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+RIM DIREITO:
+- Dimensões: ___ x ___ cm (polo a polo x espessura)
+- Localização: tópico
+- Contornos: regulares/irregulares
+- Ecotextura parenquimatosa: normal/hiperecogênica
+- Espessura cortical: ___ mm — preservada/reduzida
+- Sistema coletor: não dilatado / dilatado (___ mm)
+- Cálculos: ausentes / presente (localização, dimensão)
+- Cistos: ausentes / presente (dimensão, classificação Bosniak)
+
+RIM ESQUERDO:
+- Dimensões: ___ x ___ cm
+- Localização: tópico
+- Contornos: regulares
+- Ecotextura parenquimatosa: normal
+- Sistema coletor: não dilatado
+- Cálculos: ausentes
+- Cistos: ausentes
+
+URETERES: Não visualizados (calibre normal esperado)
+
+BEXIGA:
+- Repleção: adequada
+- Paredes: finas e regulares (___ mm)
+- Conteúdo: anecogênico
+- Resíduo pós-miccional: ___ mL
+
+CONCLUSÃO:
+[Síntese — normal, litíase, dilatação, nefropatia, etc.]`,
+
+  'tireoide': `Você é um médico ultrassonografista. Gere um laudo de tireoide completo em português brasileiro, seguindo classificação TIRADS.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE TIREOIDE
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+LOBO DIREITO:
+- Dimensões: ___ x ___ x ___ cm (AP x transversal x longitudinal)
+- Volume: ___ mL
+
+LOBO ESQUERDO:
+- Dimensões: ___ x ___ x ___ cm
+- Volume: ___ mL
+
+ISTMO: ___ mm de espessura
+
+VOLUME TIREOIDIANO TOTAL: ___ mL (normal: homens <25mL / mulheres <18mL)
+
+ECOTEXTURA: homogênea / heterogênea / difusamente hipoecogênica
+ECOGENICIDADE: normal / aumentada / reduzida comparada à musculatura adjacente
+VASCULARIZAÇÃO (Doppler se disponível): normal / aumentada
+
+NÓDULOS:
+- Ausentes
+[Se presentes:]
+- Nódulo 1: ___ x ___ mm — localização: lobo ___ / polo ___ — composição: sólido/misto/cístico — ecogenicidade: iso/hipo/hiperecogênico — contornos: regulares/irregulares — calcificações: ausentes/presentes — ACR TIRADS: ___
+
+LINFONODOS CERVICAIS: Sem linfonodos suspeitos identificados nas cadeias avaliadas.
+
+CONCLUSÃO:
+[Tireoide de dimensões normais/aumentadas/reduzidas]. [Sem nódulos / Nódulo(s) com características ACR TIRADS ___ — recomenda-se acompanhamento / PAAF conforme guidelines]. `,
+
+  'tireoide-doppler': `Você é um médico ultrassonografista. Gere um laudo de tireoide com Doppler completo em português brasileiro.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE TIREOIDE COM DOPPLER COLORIDO E ESPECTRAL
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+MODO B:
+LOBO DIREITO: ___ x ___ x ___ cm — Volume: ___ mL
+LOBO ESQUERDO: ___ x ___ x ___ cm — Volume: ___ mL
+ISTMO: ___ mm
+VOLUME TOTAL: ___ mL
+
+ECOTEXTURA: homogênea/heterogênea
+ECOGENICIDADE: normal/reduzida/aumentada
+CONTORNOS: regulares/irregulares
+
+NÓDULOS: Ausentes / [descrever com TIRADS]
+
+DOPPLER COLORIDO:
+- Vascularização do parênquima: normal (grau I — vascularização periférica discreta)
+  [Ou: aumentada — grau II (vascularização intraglandular moderada) / grau III (marcadamente aumentada — "inferno tireoidiano")]
+
+DOPPLER ESPECTRAL (artéria tireoidiana inferior):
+- Velocidade de pico sistólico (VPS): ___ cm/s (normal < 40 cm/s)
+- Índice de resistência (IR): ___
+
+LINFONODOS CERVICAIS: Sem linfonodos suspeitos.
+
+CONCLUSÃO:
+[Achados compatíveis com tireoide normal / tireoidite de Hashimoto / doença de Graves / bócio multinodular / nódulo TIRADS ___]. [Padrão de vascularização ao Doppler: normal / aumentada, sugestivo de ___].`,
+
+  'mama': `Você é um médico ultrassonografista. Gere um laudo de ultrassonografia de mama completo em português brasileiro, seguindo classificação BI-RADS.
+
+ESTRUTURA OBRIGATÓRIA:
+ULTRASSONOGRAFIA DE MAMAS
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+MAMA DIREITA:
+- Composição: predominantemente gordurosa / fibroglandular heterogênea / densa
+- Parênquima: homogêneo, sem distorções
+- Pele: espessura normal, sem espessamento focal
+- Complexo aréolo-mamilar: sem alterações
+- Nódulos: ausentes / [presentes — descrever abaixo]
+
+MAMA ESQUERDA:
+- Composição: [idem ou diferente]
+- Parênquima: homogêneo
+- Pele: normal
+- Complexo aréolo-mamilar: normal
+- Nódulos: ausentes / [presentes]
+
+[Se nódulo(s) presentes:]
+NÓDULO — Mama ___, quadrante ___, às ___ h, a ___ mm do mamilo:
+- Dimensões: ___ x ___ mm
+- Forma: oval/redonda/irregular
+- Orientação: paralela/não paralela
+- Margens: circunscritas/indistintas/espiculadas/anguladas/microlobuladas
+- Ecogenicidade: anecogênica/hipoecoica/isoecoica/hiperecoica/complexa
+- Características posteriores: reforço/sombra/ausente
+- Calcificações: ausentes/presentes
+- Vascularização ao Doppler: ausente/periférica/central
+
+LINFONODOS AXILARES: Sem linfonodos suspeitos bilateralmente.
+
+BI-RADS: ___
+(1=Normal / 2=Benigno / 3=Provavelmente benigno / 4=Suspeito / 5=Altamente suspeito / 6=Maligno confirmado)
+
+CONCLUSÃO:
+[Síntese. BI-RADS ___ — conduta recomendada conforme guidelines].`,
+};
+
+// ─── INIT ─────────────────────────────────────────────────────
+updateApiStatus();
+renderBanco(); // async — carrega do Supabase
+
+// ─── EXAM SELECT ─────────────────────────────────────────────
+function selectExam(btn) {
+  document.querySelectorAll('.exam-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedExam = btn.dataset.exam;
+  checkReady();
+}
+
+// ─── MODE SWITCH ─────────────────────────────────────────────
+function switchMode(mode, btn) {
+  inputMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('file-mode').style.display = mode === 'file' ? 'block' : 'none';
+  document.getElementById('text-mode').style.display = mode === 'text' ? 'block' : 'none';
+  document.getElementById('rec-mode').style.display = mode === 'rec' ? 'block' : 'none';
+  checkReady();
+}
+
+// ─── RECORDING ───────────────────────────────────────────────
+let recognition = null;
+let recInterval = null;
+let recSeconds = 0;
+let recTranscript = '';
+
+function startRecording() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Seu navegador não suporta gravação. Use Chrome.', 'error');
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'pt-BR';
+
+  recTranscript = '';
+  recSeconds = 0;
+  isRecording = true;
+
+  document.getElementById('rec-idle').style.display = 'none';
+  document.getElementById('rec-active').style.display = 'flex';
+  document.getElementById('rec-transcript-live').textContent = 'Aguardando fala...';
+
+  // Timer
+  recInterval = setInterval(() => {
+    recSeconds++;
+    const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+    const s = String(recSeconds % 60).padStart(2, '0');
+    document.getElementById('rec-timer').textContent = `${m}:${s}`;
+  }, 1000);
+
+  let interimTranscript = '';
+  recognition.onresult = (e) => {
+    interimTranscript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        recTranscript += t + ' ';
+      } else {
+        interimTranscript = t;
+      }
+    }
+    const display = recTranscript + (interimTranscript ? `<em style="color:var(--muted2)">${interimTranscript}</em>` : '');
+    document.getElementById('rec-transcript-live').innerHTML = display || 'Aguardando fala...';
+    // auto-scroll
+    const wrap = document.querySelector('.rec-transcript-wrap');
+    if (wrap) wrap.scrollTop = wrap.scrollHeight;
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'no-speech') showToast('Erro no microfone: ' + e.error, 'error');
+  };
+
+  // Restart automatically if it stops (navegador para após ~60s)
+  recognition.onend = () => {
+    if (isRecording) recognition.start();
+  };
+
+  recognition.start();
+  checkReady();
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) { recognition.onend = null; recognition.stop(); }
+  clearInterval(recInterval);
+
+  document.getElementById('rec-idle').style.display = 'flex';
+  document.getElementById('rec-active').style.display = 'none';
+  document.getElementById('rec-timer').textContent = '00:00';
+
+  if (recTranscript.trim().length < 5) {
+    showToast('Nenhuma fala detectada', 'error');
+    return;
+  }
+
+  // Passa para o campo de texto e gera automaticamente
+  switchMode('text', document.querySelectorAll('.mode-tab')[1]);
+  document.getElementById('text-input').value = recTranscript.trim();
+  checkReady();
+
+  showToast(`Gravação concluída (${recSeconds}s) — gerando laudo...`, 'success');
+  setTimeout(() => generateReport(), 600);
+}
+
+
+// ─── FILES ───────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+async function handleFiles(files) {
+  for (const file of files) {
+    if (uploadedFiles.length >= 8) { showToast('Máximo 8 arquivos', 'error'); break; }
+    const entry = { file, name: file.name, size: file.size, type: file.type };
+    if (file.type.startsWith('image/')) { entry.b64 = await toBase64(file); entry.mediaType = file.type; entry.isImage = true; }
+    else if (file.type === 'application/pdf') { entry.b64 = await toBase64(file); entry.mediaType = 'application/pdf'; entry.isImage = false; }
+    uploadedFiles.push(entry);
+  }
+  renderFileList();
+  checkReady();
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+
+function renderFileList() {
+  document.getElementById('file-list').innerHTML = uploadedFiles.map((f, i) => `
+    <div class="file-item">
+      <div class="file-thumb">${f.isImage ? `<img src="data:${f.mediaType};base64,${f.b64}">` : '📄'}</div>
+      <div class="file-info"><div class="file-name">${f.name}</div><div class="file-size">${(f.size/1024).toFixed(0)} KB · ${f.isImage ? 'Imagem' : 'PDF'}</div></div>
+      <button class="file-remove" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeFile(i) { uploadedFiles.splice(i, 1); renderFileList(); checkReady(); }
+
+// ─── READY ───────────────────────────────────────────────────
+function checkReady() {
+  const ok = (inputMode === 'file' && uploadedFiles.length > 0) ||
+             (inputMode === 'text' && document.getElementById('text-input').value.trim().length > 8) ||
+             (inputMode === 'rec' && isRecording);
+  document.getElementById('btn-gen').disabled = !ok || !apiKey;
+}
+
+document.getElementById('text-input').addEventListener('input', checkReady);
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+
+async function supaFetch(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(SUPA_URL + path, opts);
+  if (!r.ok) { const e = await r.text(); throw new Error(e); }
+  return r.status === 204 ? null : r.json();
+}
+
+// ─── BANCO HELPERS ───────────────────────────────────────────
+let bancoCache = null; // cache local para evitar chamadas repetidas
+
+async function getBanco() {
+  try {
+    const data = await supaFetch('/rest/v1/laudos?select=*&order=created_at.desc');
+    bancoCache = (data || []).map(l => ({
+      id: l.id,
+      exam: l.exam,
+      examName: l.exam_name,
+      class: l.classification,
+      obs: l.observation,
+      text: l.report_text,
+      date: new Date(l.created_at).toLocaleDateString('pt-BR'),
+      ts: new Date(l.created_at).getTime()
+    }));
+    return bancoCache;
+  } catch(e) {
+    console.error('Erro ao buscar banco:', e);
+    return bancoCache || [];
+  }
+}
+
+async function insertLaudo(laudo) {
+  return supaFetch('/rest/v1/laudos', 'POST', {
+    exam: laudo.exam,
+    exam_name: laudo.examName,
+    classification: laudo.class,
+    observation: laudo.obs || '',
+    report_text: laudo.text
+  });
+}
+
+async function deleteLaudoSupa(id) {
+  return supaFetch(`/rest/v1/laudos?id=eq.${id}`, 'DELETE');
+}
+
+async function getBancoReference(examType) {
+  try {
+    const data = await supaFetch(
+      `/rest/v1/laudos?exam=eq.${examType}&order=created_at.desc&limit=4&select=classification,report_text`
+    );
+    if (!data || !data.length) return '';
+    const normais = data.filter(l => l.classification === 'normal').slice(0, 2);
+    const patol   = data.filter(l => l.classification === 'patologico').slice(0, 2);
+    let ref = '\n\n--- REFERÊNCIA DO BANCO DE LAUDOS DO MÉDICO ---\n';
+    ref += 'Use os laudos abaixo como referência de estilo, terminologia e estrutura preferida pelo médico.\n';
+    if (normais.length) { ref += '\nLAUDOS NORMAIS ANTERIORES:\n'; normais.forEach((l,i) => { ref += `\n[Normal ${i+1}]:\n${l.report_text.slice(0,600)}\n`; }); }
+    if (patol.length)   { ref += '\nLAUDOS PATOLÓGICOS ANTERIORES:\n'; patol.forEach((l,i) => { ref += `\n[Patológico ${i+1}]:\n${l.report_text.slice(0,600)}\n`; }); }
+    ref += '\n--- FIM DA REFERÊNCIA ---\n';
+    return ref;
+  } catch(e) {
+    return '';
+  }
+}
+
+// ─── GENERATE ────────────────────────────────────────────────
+async function generateReport() {
+  if (!apiKey) { showToast('Configure a API Key primeiro', 'error'); return; }
+  const btn = document.getElementById('btn-gen');
+  btn.disabled = true; btn.textContent = '⏳ Analisando...';
+  showLoading();
+
+  try {
+    const sysPrompt = examPrompts[selectedExam] + await getBancoReference(selectedExam);
+    let messages = [];
+
+    if (inputMode === 'file' && uploadedFiles.length > 0) {
+      const content = [];
+      content.push({ type: 'text', text: sysPrompt + '\n\nAnalise os arquivos abaixo e gere o laudo completo preenchendo todas as medidas identificadas. Para campos não visíveis, mantenha a estrutura com dados ausentes indicados.' });
+      for (const f of uploadedFiles) {
+        if (f.isImage) {
+          content.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.b64 } });
+          content.push({ type: 'text', text: `Arquivo: ${f.name}` });
+        } else if (f.b64) {
+          content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.b64 } });
+        }
+      }
+      messages = [{ role: 'user', content }];
+    } else {
+      const userText = document.getElementById('text-input').value.trim();
+      messages = [{ role: 'user', content: sysPrompt + `\n\nTexto ditado pelo médico (pode conter conversa — extraia apenas dados clínicos, medidas e achados):\n\n"${userText}"\n\nGere o laudo completo estruturado com base nas informações clínicas extraídas. Para dados não mencionados, preencha com valores normais esperados e indique.` }];
+    }
+
+    updateStep(1);
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages })
+    });
+
+    updateStep(2);
+
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || `Erro ${resp.status}`); }
+    const data = await resp.json();
+    currentReport = data.content.map(b => b.text || '').join('');
+
+    updateStep(3);
+    await delay(300);
+    showReport(currentReport);
+    showToast('Laudo gerado!', 'success');
+
+  } catch (err) {
+    showEmpty();
+    showToast('Erro: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '⚡ Gerar Laudo'; checkReady();
+  }
+}
+
+// ─── UI STATES ───────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('report-body').innerHTML = `
+    <div class="loading-state">
+      <div class="sonar"><div class="sonar-dot"></div></div>
+      <div class="load-steps">
+        <div class="load-step active" id="step-1">· Analisando dados</div>
+        <div class="load-step" id="step-2">· Consultando banco de laudos</div>
+        <div class="load-step" id="step-3">· Gerando laudo estruturado</div>
+      </div>
+    </div>`;
+  ['btn-copy','btn-save','btn-clear'].forEach(id => document.getElementById(id).disabled = true);
+}
+
+function updateStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step-'+i);
+    if (!el) return;
+    if (i < n) el.className = 'load-step done';
+    else if (i === n) el.className = 'load-step active';
+  }
+}
+
+function showEmpty() {
+  document.getElementById('report-body').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🩻</div>
+      <div class="empty-title">Nenhum laudo gerado</div>
+      <div class="empty-sub">Selecione o exame, envie a imagem ou escreva as medidas e clique em Gerar Laudo.</div>
+    </div>`;
+}
+
+function showReport(text) {
+  document.getElementById('report-body').innerHTML = `
+    <div class="report-card">
+      <div class="report-card-header">
+        <span class="exam-tag">${examNames[selectedExam]}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);">${new Date().toLocaleDateString('pt-BR')}</span>
+      </div>
+      <textarea class="report-editable" id="report-text" oninput="currentReport=this.value">${text}</textarea>
+    </div>`;
+  ['btn-copy','btn-save','btn-clear'].forEach(id => document.getElementById(id).disabled = false);
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────
+function copyReport() {
+  const el = document.getElementById('report-text');
+  if (el) navigator.clipboard.writeText(el.value).then(() => showToast('Copiado!', 'success'));
+}
+
+function clearAll() {
+  uploadedFiles = []; currentReport = '';
+  renderFileList();
+  document.getElementById('text-input').value = '';
+  showEmpty();
+  ['btn-copy','btn-save','btn-clear'].forEach(id => document.getElementById(id).disabled = true);
+  checkReady();
+}
+
+// ─── SAVE MODAL ──────────────────────────────────────────────
+function openSaveModal() { document.getElementById('save-modal').classList.add('open'); }
+function closeSaveModal() { document.getElementById('save-modal').classList.remove('open'); }
+
+async function saveLaudo() {
+  const cls = document.getElementById('save-class').value;
+  const obs = document.getElementById('save-obs').value.trim();
+  const text = document.getElementById('report-text')?.value || currentReport;
+  if (!text) return;
+
+  try {
+    await insertLaudo({
+      exam: selectedExam,
+      examName: examNames[selectedExam],
+      class: cls,
+      obs,
+      text
+    });
+    closeSaveModal();
+    document.getElementById('save-obs').value = '';
+    bancoCache = null; // invalida cache
+    await renderBanco();
+    showToast('Laudo salvo no banco!', 'success');
+  } catch(e) {
+    showToast('Erro ao salvar: ' + e.message, 'error');
+  }
+}
+
+// ─── BANCO ───────────────────────────────────────────────────
+function filterBanco(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  bancoFilter = btn.dataset.f;
+  renderBanco(); // async
+}
+
+async function renderBanco() {
+  document.getElementById('banco-list').innerHTML = `<div class="banco-empty">Carregando...</div>`;
+  let banco = await getBanco();
+  if (bancoFilter !== 'todos') banco = banco.filter(l => l.class === bancoFilter);
+
+  document.getElementById('banco-count').textContent = (bancoCache||[]).length + ' laudos';
+
+  if (!banco.length) {
+    document.getElementById('banco-list').innerHTML = `<div class="banco-empty">Nenhum laudo ${bancoFilter !== 'todos' ? bancoFilter : 'salvo'} ainda.<br>Gere e salve laudos para<br>construir seu banco.</div>`;
+    return;
+  }
+
+  document.getElementById('banco-list').innerHTML = banco.map(l => `
+    <div class="laudo-card" id="lc-${l.id}">
+      <div class="laudo-card-top">
+        <span class="laudo-exam-tag tag-${l.class}">${l.class === 'normal' ? '✅' : '⚠️'} ${l.class}</span>
+        <span class="laudo-date">${l.date}</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">${l.examName}</div>
+      ${l.obs ? `<div style="font-size:10px;color:var(--orange);margin-bottom:4px;">📌 ${l.obs}</div>` : ''}
+      <div class="laudo-preview">${l.text}</div>
+      <div class="laudo-card-actions">
+        <button class="lc-btn" onclick="viewLaudo(${l.id})">Ver</button>
+        <button class="lc-btn" onclick="usarComoBase(${l.id})">Usar como base</button>
+        <button class="lc-btn del" onclick="deleteLaudo(${l.id})">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+
+function viewLaudo(id) {
+  const l = (bancoCache||[]).find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('report-body').innerHTML = `
+    <div class="laudo-viewer">
+      <div class="lv-header">
+        <div class="lv-title">${l.examName} · ${l.date}</div>
+        <button class="lv-close" onclick="showEmpty()">✕</button>
+      </div>
+      <div style="margin-bottom:8px;"><span class="laudo-exam-tag tag-${l.class}">${l.class === 'normal' ? '✅ Normal' : '⚠️ Patológico'}</span>${l.obs ? ` <span style="font-size:11px;color:var(--orange);margin-left:8px;">📌 ${l.obs}</span>` : ''}</div>
+      <div class="lv-text">${l.text}</div>
+    </div>`;
+}
+
+function usarComoBase(id) {
+  const l = (bancoCache||[]).find(x => x.id === id);
+  if (!l) return;
+  switchMode('text', document.querySelectorAll('.mode-tab')[1]);
+  document.getElementById('text-input').value = l.text;
+  document.querySelectorAll('.exam-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.exam === l.exam);
+    if (b.dataset.exam === l.exam) selectedExam = l.exam;
+  });
+  checkReady();
+  showToast('Laudo carregado como base', 'success');
+}
+
+async function deleteLaudo(id) {
+  try {
+    await deleteLaudoSupa(id);
+    bancoCache = null;
+    await renderBanco();
+    showToast('Laudo removido', 'success');
+  } catch(e) {
+    showToast('Erro ao remover: ' + e.message, 'error');
+  }
+}
+
+// ─── API KEY ─────────────────────────────────────────────────
+function openApiModal() {
+  document.getElementById('api-key-input').value = apiKey;
+  document.getElementById('api-modal').classList.add('open');
+}
+function closeApiModal() { document.getElementById('api-modal').classList.remove('open'); }
+function saveApiKey() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  localStorage.setItem('laudo_api_key', apiKey);
+  closeApiModal();
+  updateApiStatus();
+  checkReady();
+  showToast('API Key salva!', 'success');
+}
+function updateApiStatus() {
+  const btn = document.getElementById('api-btn');
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('api-btn-label');
+  if (apiKey) {
+    btn.classList.add('configured');
+    dot.classList.add('on');
+    lbl.textContent = 'API Configurada ✓';
+  } else {
+    btn.classList.remove('configured');
+    dot.classList.remove('on');
+    lbl.textContent = 'Configurar API Key';
+  }
+}
+
+// ─── TOAST ───────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Close modals on overlay click
+document.getElementById('save-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSaveModal(); });
+document.getElementById('api-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeApiModal(); });
+</script>
+</body>
+</html>
