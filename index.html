@@ -259,7 +259,6 @@ header{position:relative;z-index:100;display:flex;align-items:center;justify-con
         <div class="exam-list" id="exam-list">
           <button class="exam-btn active" data-exam="obstetrico" onclick="selectExam(this)"><span class="ei">🤰</span><span class="ec">Obstétrico</span></button>
           <button class="exam-btn" data-exam="abdome" onclick="selectExam(this)"><span class="ei">🫀</span><span class="ec">Abdome Total</span></button>
-          <button class="exam-btn" data-exam="transvaginal" onclick="selectExam(this)"><span class="ei">🔬</span><span class="ec">Transvaginal</span></button>
           <button class="exam-btn" data-exam="ginecologico" onclick="selectExam(this)"><span class="ei">🧬</span><span class="ec">Ginecológico</span></button>
           <button class="exam-btn" data-exam="prostata" onclick="selectExam(this)"><span class="ei">🩺</span><span class="ec">Próstata</span></button>
           <button class="exam-btn" data-exam="rins" onclick="selectExam(this)"><span class="ei">💧</span><span class="ec">Rins e Vias Urinárias</span></button>
@@ -356,6 +355,7 @@ A IA filtra a conversa e extrai só os dados clínicos." rows="6"></textarea>
     </div>
     <div class="panel-scroll">
       <div class="sec">
+        <button id="btn-importar" onclick="importarTemplates()" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid rgba(0,200,240,.25);background:var(--cyan-dim);color:var(--cyan);font-family:IBM Plex Sans,sans-serif;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:14px;">📥 Importar Meus Templates</button>
         <div class="banco-filters">
           <button class="filter-btn active" data-f="todos" onclick="filterBanco(this)">Todos</button>
           <button class="filter-btn normal-f" data-f="normal" onclick="filterBanco(this)">Normais</button>
@@ -432,7 +432,6 @@ let isRecording = false;
 const examNames = {
   'obstetrico':       '🤰 Obstétrico',
   'abdome':           '🫀 Abdome Total',
-  'transvaginal':     '🔬 Transvaginal',
   'ginecologico':     '🧬 Ginecológico',
   'prostata':         '🩺 Próstata',
   'rins':             '💧 Rins e Vias Urinárias',
@@ -511,36 +510,6 @@ LÍQUIDO LIVRE ABDOMINAL: Ausente.
 
 CONCLUSÃO:
 [Síntese dos achados — normal ou descrever alterações]`,
-
-  'transvaginal': `Você é um médico ultrassonografista. Gere um laudo de ultrassonografia transvaginal completo em português brasileiro.
-
-ESTRUTURA OBRIGATÓRIA:
-ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL
-Data: ${new Date().toLocaleDateString('pt-BR')}
-
-ÚTERO:
-- Posição: antevertido/retrovertido/mediovertido
-- Dimensões: ___ x ___ x ___ cm (comprimento x AP x largura)
-- Volume uterino: ___ cm³
-- Contornos: regulares/irregulares
-- Ecotextura miometrial: homogênea/heterogênea
-- Endométrio: ___ mm de espessura — aspecto proliferativo/secretor/atrófico/irregular
-- Linha endometrial: centrada/desviada
-
-OVÁRIO DIREITO:
-- Dimensões: ___ x ___ x ___ cm — Volume: ___ cm³
-- Aspecto: normal / folículo dominante (___ mm) / cisto simples (___ mm) / outros
-
-OVÁRIO ESQUERDO:
-- Dimensões: ___ x ___ x ___ cm — Volume: ___ cm³
-- Aspecto: normal / folículo dominante (___ mm) / cisto simples (___ mm) / outros
-
-REGIÃO ANEXIAL: Sem massas ou coleções
-
-FUNDO DE SACO DE DOUGLAS: Livre / pequena quantidade de líquido livre
-
-CONCLUSÃO:
-[Síntese dos achados principais]`,
 
   'ginecologico': `Você é um médico ultrassonografista. Gere um laudo ginecológico abdominal completo em português brasileiro.
 
@@ -732,9 +701,36 @@ CONCLUSÃO:
 [Síntese. BI-RADS ___ — conduta recomendada conforme guidelines].`,
 };
 
-// ─── INIT ─────────────────────────────────────────────────────
+// ─── TEMPLATES PADRÃO DR. ROBERTO ────────────────────────────
+const templatesBase = [
+  { exam: "abdome", examName: "Abdome Total", class: "normal", obs: "Template padrao normal", text: "ULTRASSONOGRAFIA DO ABDOME TOTAL\n\nFigado com dimensoes e forma normais, contornos regulares e ecotextura parenquimatosa homogenea. Nao ha evidencias ecograficas de lesoes hepaticas focais. As veias hepaticas tem configuracao anatomica e a veia porta tem calibre normal.\n\nNao ha dilatacao das vias biliares intra ou extra-hepaticas.\n\nVesicula biliar distendida fisiologicamente, com dimensoes normais, com paredes finas e conteudo anecoico, sem evidencias de calculos.\n\nPancreas com morfologia, contornos, dimensoes e ecotextura parenquimatosa preservados.\n\nBaco topico, com dimensoes, contornos e ecotextura normais.\n\nRins topicos, com forma, contornos e dimensoes normais. A espessura e a ecogenicidade do parenquima estao preservadas. Ausencia de hidronefrose. Ecograficamente nao se evidenciam calculos renais.\n\nAorta e veia cava inferior com trajeto e calibre normais.\n\nBexiga em replecao fisiologica, com paredes finas e conteudo anecoico.\n\nAusencia de liquido livre ou colecoes na cavidade abdominal.\n\nIMPRESSAO DIAGNOSTICA:\n\n- Exame ecografico normal.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367\nMembro Titular do Colegio Brasileiro de Radiologia\nEspecialista em Diagnostico por Imagem pela AMB" },
+  { exam: "ginecologico", examName: "Ginecologico", class: "normal", obs: "Template padrao normal", text: "ULTRASSONOGRAFIA ENDOVAGINAL\n\nUtero em anteversoflexao, centrado, com contornos regulares, dimensoes normais e ecotextura homogenea.\n\nO utero mede ___ cm, com volume estimado de ___ cm3.\n\nEndometrio centrado, homogeneo, com ___ mm de espessura.\n\nOvario direito com dimensoes, forma e contornos normais, com ecotextura preservada.\nMedidas: ___ cm, com volume de ___ cm3.\n\nOvario esquerdo com dimensoes, forma e contornos normais, com ecotextura preservada.\nMedidas: ___ cm, com volume de ___ cm3.\n\nAusencia de liquido livre ou colecoes na pequena pelve.\n\nIMPRESSAO DIAGNOSTICA:\n\n- Exame ecografico normal.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "tireoide-doppler", examName: "Tireoide c/ Doppler", class: "normal", obs: "Template padrao normal", text: "ULTRASSONOGRAFIA DE TIREOIDE COM DOPPLER\n\nTIREOIDE: Tecido glandular de volume preservado, contornos regulares, com ecogenicidade e ecotextura homogenea. Nao ha nodulos, nem cistos detectaveis ao ultrassom.\n\nMedidas lobo direito: ___ cm, volume = ___ cm3.\nMedidas lobo esquerdo: ___ cm, volume = ___ cm3.\n\nISTMO: Homogeneo, contornos regulares. Medidas: ___ cm.\n\nVolume global da glandula = ___ cm3.\n\nDOPPLERVELOCIMETRIA COLORIDA: padrao vascular habitual.\nATID: VPS ___ cm/s (VR ate 40cm/s)\nATIE: VPS ___ cm/s (VR ate 40cm/s)\n\nVasos cervicais com calibre e pulsatilidade normais.\n\nCONCLUSAO:\n- Exame ecografico normal.\n- Estudo Doppler dentro dos limites da normalidade.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "rins", examName: "Rins e Vias Urinarias", class: "normal", obs: "Template padrao normal", text: "ULTRASSONOGRAFIA DO APARELHO URINARIO\n\nRim direito topico, com forma, contornos e dimensoes normais. A espessura e a ecogenicidade do parenquima estao preservadas. Ausencia de hidronefrose. Ecograficamente nao se evidenciam calculos renais.\n\nRim esquerdo topico, com forma, contornos e dimensoes normais. A espessura e a ecogenicidade do parenquima estao preservadas. Ausencia de hidronefrose. Ecograficamente nao se evidenciam calculos renais.\n\nMedidas:\nRim direito: eixo bipolar ___ cm. Espessura do parenquima ___ cm.\nRim esquerdo: eixo bipolar ___ cm. Espessura do parenquima ___ cm.\n\nBexiga em replecao com paredes finas e conteudo anecoico.\n\nIMPRESSAO DIAGNOSTICA:\n- Exame ecografico sem achados patologicos.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "mama", examName: "Mama", class: "normal", obs: "Template padrao normal", text: "ULTRASSONOGRAFIA DAS MAMAS + AXILAS\n\nPlanos superficiais e profundos sem alteracoes.\n\nMamas apresentando tecido glandular predominante, com ecotextura normal.\n\nNao se observam imagens nodulares solidas ou cisticas.\n\nLinfonodos da cadeia axilar com forma, dimensoes, contornos e ecotextura normais.\n\nRegioes para-esternal e prolongamentos axilares livres.\n\nIMPRESSAO DIAGNOSTICA:\n- Exame sem anormalidades ecograficas (BI-RADS 1).\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "obstetrico", examName: "Obstetrico Inicial", class: "normal", obs: "Template USG obstetrica inicial", text: "ULTRASSONOGRAFIA OBSTETRICA INICIAL\n\nImagem uterina gravidica normal, apresentando saco gestacional integro em cujo interior nota-se embriao/feto unico, em situacao e apresentacao variaveis, com movimentos espontaneos e estimulados presentes. Frequencia cardiaca de ___ bpm. Cavidade amniotica normal.\n\nBiometria Fetal:\nComprimento cranio-nadegas (CCN) = ___ mm.\n\nAnexos uterinos sem alteracoes.\nVesicula vitelina bem visualizada de aspecto habitual.\n\nCONCLUSAO:\nGestacao topica, unica, com vitalidade fetal preservada, de ___ semanas datada pelo comprimento cabeca-nadegas.\n\n*Trata-se do primeiro exame obstetrico.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "obstetrico", examName: "Obstetrico 2o Trimestre", class: "normal", obs: "Template USG obstetrica 2o trimestre", text: "ULTRASSONOGRAFIA OBSTETRICA\n\nFeto unico em situacao longitudinal, apresentacao cefalica, com dorso a direita/esquerda.\nBatimentos cardiacos fetais detectados. Frequencia cardiaca ___ bpm. Movimentos fetais presentes.\n\nBiometria fetal:\nD.B.P.: ___ cm.   Circunferencia craniana: ___ cm.\nFemur: ___ cm.   Circunferencia abdominal: ___ cm.\nPeso fetal estimado em ___ gramas (+/-10%) (Percentil ___)\n\nPlacenta:\nImplantada em parede anterior/posterior, heterogenea, grau II de maturidade (escala de Grannum 0-III).\n\nLiquido amniotico: volume normal para a fase gestacional, maior bolsao de ___ cm.\n\nIMPRESSAO DIAGNOSTICA:\n- Gestacao de ___ semanas e ___ dias com vitalidade fetal preservada.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" },
+  { exam: "obstetrico", examName: "Obstetrico com Doppler", class: "normal", obs: "Template USG obstetrica com Doppler", text: "ULTRASSONOGRAFIA OBSTETRICA COM DOPPLER\n\nPresenca de feto unico, situacao longitudinal, apresentacao cefalica, dorso a direita. BCF detectados. FC ___ bpm.\n\nBiometria fetal:\nDiametro biparietal: ___ cm.\nCircunferencia cefalica (CC): ___ cm.\nCircunferencia abdominal (CA): ___ cm.\nComprimento femoral (CF): ___ cm.\nPeso fetal estimado: ___ g (+/-10%) Percentil ___.\n\nPlacenta: Implantada em parede posterior, grau II de maturidade.\nLiquido amniotico: volume normal, maior bolsao ___ cm.\n\nDOPPLER:\nArterias umbilicais: IP ___ (nl < percentil 95)\nArteria cerebral media: IP ___ (nl > percentil 5)\nArteria uterina direita IP: ___\nArteria uterina esquerda IP: ___\n\nIMPRESSAO DIAGNOSTICA:\n- Gestacao de ___ semanas e ___ dias.\n- Crescimento fetal adequado (Percentil ___)\n- Estudo Doppler dentro dos padroes de normalidade.\n\nDR. ROBERTO FREIRE MARGOTTI\nCRM-BA 26929 | RQE: 21367" }
+]
+
+async function importarTemplates() {
+  const btn = document.getElementById("btn-importar");
+  btn.disabled = true;
+  btn.textContent = "Importando...";
+  let ok = 0;
+  for (const t of templatesBase) {
+    try { await insertLaudo(t); ok++; } catch(e) { console.error(e); }
+  }
+  bancoCache = null;
+  await renderBanco();
+  showToast(ok + " templates salvos no banco!", "success");
+  btn.textContent = ok + " templates importados!";
+  setTimeout(() => { btn.textContent = "Importar Meus Templates"; btn.disabled = false; }, 3000);
+}
+
+// INIT
 updateApiStatus();
-renderBanco(); // async — carrega do Supabase
+renderBanco();
 
 // ─── EXAM SELECT ─────────────────────────────────────────────
 function selectExam(btn) {
